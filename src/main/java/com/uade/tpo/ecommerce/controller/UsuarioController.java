@@ -25,7 +25,7 @@ public class UsuarioController {
         return "Hola Bro, te traje el usuario con id: " + id;
     }
 
-    @GetMapping("/email")
+    @GetMapping("/{email}")
     public String getUserByEmail(@RequestParam String email){
         if (email == null || email.isEmpty()) {
             return "El email no puede ser nulo o vacío";
