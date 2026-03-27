@@ -3,7 +3,6 @@ package com.uade.tpo.ecommerce.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +17,5 @@ public class User {
     @Column(unique = true)
     private String password;
 
-    @ManyToMany(mappedBy = "users")
-    private java.util.Set<Product> products;
 
 }
