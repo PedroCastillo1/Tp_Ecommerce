@@ -9,14 +9,14 @@ import com.uade.tpo.ecommerce.model.User;
 import com.uade.tpo.ecommerce.repository.IUserRepository;
 
 @Service
-public class UserService implements IUserService  {
+public class UserService implements IUserService {
+
     @Autowired
     private IUserRepository userRepository;
 
     @Override
     public List<User> getAllUsers() {
-        List<User> ListaUsers = userRepository.findAll();
-        return ListaUsers;
+        return userRepository.findAll();
     }
 
     @Override
@@ -25,17 +25,18 @@ public class UserService implements IUserService  {
     }
 
     @Override
-    public User updateUser(Long id, long idnueva,String username,String password) {
+    public User updateUser(Long id, String username, String email, String password, String nombre, String apellido) {
         User existingUser = userRepository.findById(id).orElse(null);
         if (existingUser != null) {
-            existingUser.setId(idnueva);
             existingUser.setUsername(username);
+            existingUser.setEmail(email);
             existingUser.setPassword(password);
+            existingUser.setNombre(nombre);
+            existingUser.setApellido(apellido);
             return userRepository.save(existingUser);
         }
         return null;
     }
-
 
     @Override
     public void deleteAllUsers() {
@@ -44,7 +45,7 @@ public class UserService implements IUserService  {
 
     @Override
     public void deleteUserById(Long id) {
-       userRepository.deleteById(id);
+        userRepository.deleteById(id);
     }
 
     @Override
@@ -57,13 +58,25 @@ public class UserService implements IUserService  {
         return userRepository.existsById(id);
     }
 
+    @Override
+    public User findUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
 
     @Override
-    public User findUserByid(Long id) {
-        return userRepository.findById(id).orElse(null);
-    } 
-    
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
 
-
-    
+    @Override
+    public User login(String email, String password) {
+       
+        User user = userRepository.findByEmail(email).orElse(null);
+        
+        
+        if (user != null && user.getPassword().equals(password)) {
+            return user;
+        }
+        return null;
+    }
 }

@@ -1,22 +1,18 @@
 package com.uade.tpo.ecommerce.service;
 
+import java.math.BigDecimal;
 import java.util.List;
-
-import org.springframework.stereotype.Service;
+import java.util.Set;
 
 import com.uade.tpo.ecommerce.model.Category;
 import com.uade.tpo.ecommerce.model.Product;
 
-@Service
-public interface  IProductService {
-    public void saveProduct(Product product);
-    public boolean existsById(Long id);
-    public Product findProductByid(Long id);
-    public List<Product> getAllProducts();
-    public Product createProduct(Product product);
-    public Product updateProduct(Long id, long idnueva,String name, String description, double price, int stock, Category category);
-    public void deleteAllProducts();
-    public void deleteProductById(Long id);
-    
-    
+public interface IProductService {
+    List<Product> getAllProducts();
+    List<Product> getAllProductsOrdered();
+    Product createProduct(Product product);
+    Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, String imageUrl, Set<Category> categories);
+    void deleteProductById(Long id);
+    Product findProductById(Long id);
+    boolean existsById(Long id);
 }

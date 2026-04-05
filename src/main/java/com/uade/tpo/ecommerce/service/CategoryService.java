@@ -3,10 +3,14 @@ package com.uade.tpo.ecommerce.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.uade.tpo.ecommerce.model.Category;
 import com.uade.tpo.ecommerce.repository.ICategoriaRepository;
 
+
+
+@Service
 public class CategoryService implements ICategoryService {
 
     @Autowired
@@ -51,10 +55,9 @@ public class CategoryService implements ICategoryService {
     }
 
     @Override
-    public Category updateCategory(Long id, long idnueva, String name) {
+    public Category updateCategory(Long id, String name) {
         Category existingCategory = categoriaRepository.findById(id).orElse(null);
         if (existingCategory != null) {
-            existingCategory.setId(idnueva);
             existingCategory.setName(name);
             return categoriaRepository.save(existingCategory);
         }

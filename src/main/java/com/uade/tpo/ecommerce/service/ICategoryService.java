@@ -16,7 +16,7 @@ public interface ICategoryService {
     public Category findCategoryByid(Long id);
     public List<Category> getAllCategories();
     public Category createCategory(Category category);
-    public Category updateCategory(Long id, long idnueva,String name);
+    public Category updateCategory(Long id,String name);
 
     
 }
