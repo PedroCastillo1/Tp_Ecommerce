@@ -3,6 +3,8 @@ package com.uade.tpo.ecommerce.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.ecommerce.model.User;
@@ -70,13 +72,17 @@ public class UserService implements IUserService {
 
     @Override
     public User login(String email, String password) {
-       
         User user = userRepository.findByEmail(email).orElse(null);
-        
-        
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }
         return null;
+    }
+
+    // Requerido por UserDetailsService para Spring Security
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
     }
 }

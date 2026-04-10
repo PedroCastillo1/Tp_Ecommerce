@@ -34,6 +34,8 @@ public class AuthenticationService {
             user.setApellido(request.getApellido());
             user.setEmail(request.getEmail());
             user.setUsername(request.getUsername());
+            user.setFechaNacimiento(request.getFechaNacimiento());
+            user.setSexo(request.getSexo());
 
             // Cifrado de contraseña
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -56,7 +58,7 @@ public class AuthenticationService {
             User user = userRepository.findByEmail(email).orElseThrow();
             return jwtService.generateToken(user);
         } catch (Exception e) {
-            throw new RuntimeException("Credenciales invÃ¡lidas o error de servidor");
+            throw new RuntimeException("Credenciales inválidas o error de servidor");
         }
     }
 }

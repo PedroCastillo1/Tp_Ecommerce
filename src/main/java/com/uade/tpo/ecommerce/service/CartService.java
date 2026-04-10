@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.uade.tpo.ecommerce.exception.ProductoNotFoundException;
 import com.uade.tpo.ecommerce.model.CartItem;
 import com.uade.tpo.ecommerce.model.Product;
 import com.uade.tpo.ecommerce.model.User;
-import com.uade.tpo.ecommerce.repository.ICartRepository; // Debés crear esta interfaz igual a las otras
+import com.uade.tpo.ecommerce.repository.ICartRepository;
+import com.uade.tpo.ecommerce.repository.IProductosRepository;
 
 @Service
 public class CartService implements ICartService {
@@ -15,18 +17,21 @@ public class CartService implements ICartService {
     @Autowired
     private ICartRepository cartRepository;
 
+    // Usamos el repositorio directo para operaciones internas del carrito
+    // (acceso a la entidad Product necesario para manejar stock)
     @Autowired
-    private IProductService productService;
+    private IProductosRepository productosRepository;
 
     @Autowired
     private IUserService userService;
 
     @Override
     public CartItem addItem(Long userId, Long productId, Integer quantity) {
-        Product product = productService.findProductById(productId);
+        Product product = productosRepository.findById(productId)
+                .orElseThrow(() -> new ProductoNotFoundException(productId));
         User user = userService.findUserById(userId);
 
-        // Validación de stock que pide la consigna
+        // Validación de stock
         if (product.getStock() < quantity) {
             throw new RuntimeException("No hay stock suficiente");
         }
@@ -37,7 +42,7 @@ public class CartService implements ICartService {
 
     @Override
     public List<CartItem> getCartByUser(Long userId) {
-        return cartRepository.findByUserId(userId); // Necesitás este método en el Repo
+        return cartRepository.findByUserId(userId);
     }
 
     @Override
@@ -58,15 +63,15 @@ public class CartService implements ICartService {
 
         for (CartItem item : items) {
             Product p = item.getProduct();
-            
+
             // Validamos stock final antes de procesar
             if (p.getStock() < item.getQuantity()) {
                 throw new RuntimeException("Stock agotado para: " + p.getName());
             }
 
-            // Descontamos stock como pide el TPO
+            // Descontamos stock
             p.setStock(p.getStock() - item.getQuantity());
-            productService.createProduct(p); // Actualizamos el producto en la BD
+            productosRepository.save(p);
 
             // Calculamos el total
             BigDecimal subtotal = p.getPrice().multiply(new BigDecimal(item.getQuantity()));

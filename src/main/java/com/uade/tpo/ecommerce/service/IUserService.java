@@ -2,9 +2,11 @@ package com.uade.tpo.ecommerce.service;
 
 import java.util.List;
 
+import org.springframework.security.core.userdetails.UserDetailsService;
+
 import com.uade.tpo.ecommerce.model.User;
 
-public interface IUserService {
+public interface IUserService extends UserDetailsService {
     List<User> getAllUsers();
     User createUser(User user);
     User updateUser(Long id, String username, String email, String password, String nombre, String apellido);

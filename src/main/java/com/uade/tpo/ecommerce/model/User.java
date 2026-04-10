@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,13 +24,18 @@ public class User implements UserDetails {
     private String username;
 
     @Column(unique = true, nullable = false)
-    private String email; 
+    private String email;
 
     @Column(nullable = false)
     private String password;
 
     private String nombre;
     private String apellido;
+
+    private LocalDate fechaNacimiento;
+
+    @Enumerated(EnumType.STRING)
+    private Sexo sexo;
 
     @Enumerated(EnumType.STRING)
     private Role role;
