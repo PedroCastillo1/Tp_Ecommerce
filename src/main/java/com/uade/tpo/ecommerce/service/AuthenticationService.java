@@ -1,5 +1,6 @@
 package com.uade.tpo.ecommerce.service;
 
+import com.uade.tpo.ecommerce.model.RegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,20 +26,25 @@ public class AuthenticationService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public String register(User request) {
+    public String register(RegisterRequest request) {
         try {
+            // Mapeamos del DTO a la Entidad
             User user = new User();
             user.setNombre(request.getNombre());
             user.setApellido(request.getApellido());
             user.setEmail(request.getEmail());
             user.setUsername(request.getUsername());
-            user.setPassword(passwordEncoder.encode(request.getPassword())); // Encriptamos la clave
-            user.setRole(Role.USER); // Rol por defecto
+
+            // Cifrado de contraseña
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setRole(Role.USER);
 
             userRepository.save(user);
+
+            // Generamos el token de acceso
             return jwtService.generateToken(user);
         } catch (Exception e) {
-            throw new RuntimeException("Error al registrar el usuario: " + e.getMessage());
+            throw new RuntimeException("Error al procesar el registro: " + e.getMessage());
         }
     }
 
