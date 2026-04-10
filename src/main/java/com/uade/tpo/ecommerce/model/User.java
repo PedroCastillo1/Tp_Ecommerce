@@ -1,44 +1,63 @@
 package com.uade.tpo.ecommerce.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "usuarios")
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(unique = true, nullable = false)
     private String username;
-    
+
     @Column(unique = true, nullable = false)
     private String email; 
-    
+
     @Column(nullable = false)
     private String password;
-    
+
     private String nombre;
     private String apellido;
 
-    public User() {
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    public User() {}
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        try {
+            return List.of(new SimpleGrantedAuthority("ROLE_" + (role != null ? role.name() : "USER")));
+        } catch (Exception e) {
+            return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
     }
 
-    public User(Long id, String username, String email, String password, String nombre, String apellido) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.nombre = nombre;
-        this.apellido = apellido;
+    @Override
+    public String getUsername() {
+        return email; // Usamos el email como identificador para el login
     }
+
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() { return true; }
 }
