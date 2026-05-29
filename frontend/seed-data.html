@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Seed Data — TiendaTPO</title>
+<style>
+  body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #ebebeb; }
+  h1 { color: #3483fa; }
+  input, button { padding: 10px; border-radius: 6px; font-size: 14px; }
+  input { border: 1px solid #ddd; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
+  button { background: #3483fa; color: #fff; border: none; cursor: pointer; width: 100%; font-weight: 700; font-size: 15px; margin-top: 6px; }
+  #log { background: #fff; border-radius: 8px; padding: 16px; margin-top: 20px; max-height: 400px; overflow-y: auto; font-size: 13px; font-family: monospace; }
+  .ok  { color: #2e7d32; } .err { color: #c62828; } .info { color: #1565c0; }
+</style>
+</head>
+<body>
+<h1>🛒 TiendaTPO — Carga de datos de ejemplo</h1>
+<p>Ingresá con una cuenta de administrador para cargar 8 categorías y 24 productos.</p>
+<input id="email"    type="email"    placeholder="Email admin"       value="admin@tienda.com"/>
+<input id="password" type="password" placeholder="Contraseña admin"  value="admin123"/>
+<button onclick="runSeed()">▶ Cargar datos de ejemplo</button>
+<div id="log"><span class="info">Esperando...</span></div>
+
+<script>
+const BASE = 'http://localhost:8080';
+const log  = (msg, cls='') => { const d=document.getElementById('log'); d.innerHTML += `<div class="${cls}">${msg}</div>`; d.scrollTop=d.scrollHeight; };
+
+const CATEGORIES = ['Electrónica','Ropa','Calzado','Hogar','Deportes','Libros','Juguetes','Belleza'];
+
+const PRODUCTS = [
+  // Electrónica
+  { name:'Smartphone Galaxy S24',      description:'Último modelo con IA integrada y cámara de 50MP.',         price:899.99, stock:25, imageUrl:'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&q=80', cat:'Electrónica' },
+  { name:'Laptop UltraBook Pro 15',    description:'Intel Core i7, 16GB RAM, SSD 512GB, pantalla 4K.',         price:1299.99,stock:10, imageUrl:'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80', cat:'Electrónica' },
+  { name:'Auriculares Sony WH-1000XM5',description:'Cancelación de ruido activa, 30hs de batería.',            price:349.99, stock:40, imageUrl:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80', cat:'Electrónica' },
+  { name:'Smart TV 55" 4K OLED',       description:'Panel OLED, HDR10+, Google TV, Dolby Atmos.',             price:1099.99,stock:8,  imageUrl:'https://images.unsplash.com/photo-1593359677879-a4bb92f4834c?w=500&q=80', cat:'Electrónica' },
+  { name:'Tablet iPad Air 11"',        description:'Chip M2, 256GB, pantalla Liquid Retina.',                  price:749.99, stock:15, imageUrl:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500&q=80', cat:'Electrónica' },
+  { name:'Cámara Mirrorless Sony A7IV',description:'Full frame, 33MP, video 4K 120fps.',                      price:2499.99,stock:5,  imageUrl:'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500&q=80', cat:'Electrónica' },
+  // Ropa
+  { name:'Remera Premium Algodón',     description:'100% algodón peinado, corte regular fit, varios colores.', price:29.99,  stock:100,imageUrl:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&q=80', cat:'Ropa' },
+  { name:'Campera Impermeable North',  description:'Shell 3 capas, sellado de costuras, capucha ajustable.',   price:189.99, stock:30, imageUrl:'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80', cat:'Ropa' },
+  { name:'Jeans Slim Fit Premium',     description:'Denim elastizado, corte slim, lavado stone.',              price:79.99,  stock:60, imageUrl:'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&q=80', cat:'Ropa' },
+  // Calzado
+  { name:'Zapatillas Nike Air Max 270',description:'Amortiguación Air, suela de goma, diseño retro.',          price:149.99, stock:45, imageUrl:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80', cat:'Calzado' },
+  { name:'Botas de cuero artesanales', description:'Cuero vacuno curtido al vegetal, suela de cuero.',         price:219.99, stock:20, imageUrl:'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=500&q=80', cat:'Calzado' },
+  { name:'Ojotas de playa con plantilla',description:'EVA ultraliviana, plantilla ergonómica, antideslizante.',price:24.99,  stock:80, imageUrl:'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=500&q=80', cat:'Calzado' },
+  // Hogar
+  { name:'Sofá 3 cuerpos aterciopelado',description:'Tapizado en terciopelo, estructura de madera maciza.',    price:599.99, stock:6,  imageUrl:'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&q=80', cat:'Hogar' },
+  { name:'Cafetera de cápsulas Nespresso',description:'19 bar de presión, depósito 1L, calienta en 25s.',     price:129.99, stock:35, imageUrl:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&q=80', cat:'Hogar' },
+  { name:'Set de sábanas 400 hilos',   description:'100% algodón egipcio, incluye funda de almohada.',         price:89.99,  stock:50, imageUrl:'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80', cat:'Hogar' },
+  // Deportes
+  { name:'Bicicleta MTB 29" Shimano',  description:'21 velocidades, frenos hidráulicos, cuadro aluminio.',     price:549.99, stock:12, imageUrl:'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&q=80', cat:'Deportes' },
+  { name:'Mat de yoga antideslizante', description:'6mm de grosor, material TPE, incluye correa.',             price:39.99,  stock:75, imageUrl:'https://images.unsplash.com/photo-1601925228032-58a9c5cc9a10?w=500&q=80', cat:'Deportes' },
+  { name:'Pelota de fútbol adidas',    description:'FIFA Quality Pro, cuero sintético, talla 5.',              price:59.99,  stock:55, imageUrl:'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=500&q=80', cat:'Deportes' },
+  // Libros
+  { name:'El Poder del Ahora',         description:'Eckhart Tolle. Guía para la iluminación espiritual.',      price:18.99,  stock:90, imageUrl:'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=500&q=80', cat:'Libros' },
+  { name:'Sapiens: De animales a dioses',description:'Yuval Noah Harari. Historia breve de la humanidad.',    price:22.99,  stock:70, imageUrl:'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&q=80', cat:'Libros' },
+  // Juguetes
+  { name:'LEGO Technic Ferrari 488',   description:'1677 piezas, motor funcional, escala 1:8.',               price:199.99, stock:18, imageUrl:'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=500&q=80', cat:'Juguetes' },
+  { name:'Control PS5 DualSense',      description:'Gatillos adaptativos, retroalimentación háptica.',         price:89.99,  stock:28, imageUrl:'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=500&q=80', cat:'Juguetes' },
+  // Belleza
+  { name:'Perfume Chanel Bleu 100ml',  description:'Fragancia amaderada aromática, larga duración.',           price:159.99, stock:22, imageUrl:'https://images.unsplash.com/photo-1541643600914-78b084683702?w=500&q=80', cat:'Belleza' },
+  { name:'Kit de maquillaje profesional',description:'36 sombras, base, blush, iluminador y pinceles.',       price:79.99,  stock:40, imageUrl:'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&q=80', cat:'Belleza' },
+];
+
+async function runSeed() {
+  document.getElementById('log').innerHTML = '';
+  const email    = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  log('🔐 Iniciando sesión...', 'info');
+  let token;
+  try {
+    const r = await fetch(`${BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+    if (!r.ok) throw new Error(await r.text());
+    token = await r.text();
+    log('✅ Login exitoso', 'ok');
+  } catch(e) { log('❌ Error de login: ' + e.message, 'err'); return; }
+
+  const headers = { 'Content-Type':'application/json', Authorization:`Bearer ${token}` };
+
+  // Crear categorías
+  log('📂 Creando categorías...', 'info');
+  const catMap = {};
+  for (const name of CATEGORIES) {
+    try {
+      const r = await fetch(`${BASE}/categoria`, { method:'POST', headers, body: JSON.stringify({name}) });
+      if (!r.ok) throw new Error(await r.text());
+      const cat = await r.json();
+      catMap[name] = cat.id;
+      log(`  ✅ Categoría "${name}" (id=${cat.id})`, 'ok');
+    } catch(e) { log(`  ⚠️ "${name}": ${e.message}`, 'err'); }
+  }
+
+  // Crear productos
+  log('📦 Creando productos...', 'info');
+  for (const p of PRODUCTS) {
+    const catId = catMap[p.cat];
+    if (!catId) { log(`  ⚠️ Categoría no encontrada para "${p.name}"`, 'err'); continue; }
+    try {
+      const body = { name:p.name, description:p.description, price:p.price, stock:p.stock, imageUrl:p.imageUrl, categoryIds:[catId] };
+      const r = await fetch(`${BASE}/api/productos`, { method:'POST', headers, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error(await r.text());
+      const prod = await r.json();
+      log(`  ✅ "${p.name}" — $${p.price} (id=${prod.id})`, 'ok');
+    } catch(e) { log(`  ❌ "${p.name}": ${e.message}`, 'err'); }
+  }
+
+  log('', '');
+  log('🎉 ¡Seed completado! Recargá la tienda en localhost:3000', 'ok');
+}
+</script>
+</body>
+</html>
