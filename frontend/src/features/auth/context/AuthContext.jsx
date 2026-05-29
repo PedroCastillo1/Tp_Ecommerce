@@ -4,10 +4,10 @@ import { authService } from '../services/authService';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true); // Start with loading true
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -19,15 +19,12 @@ export const AuthProvider = ({ children }) => {
           if (userData) {
             setUser(userData);
             setIsAuthenticated(true);
+          } else {
+            localStorage.removeItem('token');
           }
         })
-        .catch(err => {
-          // Handle error, maybe token is invalid
-          localStorage.removeItem('token');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+        .catch(() => localStorage.removeItem('token'))
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -42,12 +39,27 @@ export const AuthProvider = ({ children }) => {
         setToken(data.token);
         localStorage.setItem('token', data.token);
         setIsAuthenticated(true);
-        setUser(data.user || null);
+        const userData = await authService.getCurrentUser(data.token);
+        setUser(userData);
         return true;
       }
       return false;
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.register(data);
+      return true;
+    } catch (err) {
+      setError(err.message || 'Error al registrarse');
       return false;
     } finally {
       setLoading(false);
@@ -62,17 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        isAuthenticated, 
-        user, 
-        token,
-        loading, 
-        error, 
-        login, 
-        logout 
-      }}
-    >
+    <AuthContext.Provider value={{ isAuthenticated, user, token, loading, error, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -80,8 +82,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-  }
+  if (!context) throw new Error('useAuth debe ser usado dentro de un AuthProvider');
   return context;
 };

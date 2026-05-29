@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
+import './ProductList.css';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -8,10 +9,7 @@ const ProductList = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
+    const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
     const token = localStorage.getItem('token');
     if (token) headers['Authorization'] = token;
 
@@ -24,15 +22,8 @@ const ProductList = () => {
       .catch(err => { setError(err.message); setLoading(false); });
   }, []);
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', color: '#888' }}>
-      Cargando productos...
-    </div>
-  );
-
-  if (error) return (
-    <div style={{ padding: '2rem', color: '#c62828' }}>Error: {error}</div>
-  );
+  if (loading) return <div className="loading-state">Cargando productos...</div>;
+  if (error)   return <div className="error-state">Error: {error}</div>;
 
   const filtered = products.filter(p =>
     p.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -40,30 +31,19 @@ const ProductList = () => {
   );
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 style={{ margin: 0, color: '#1a1a2e' }}>Catálogo de Productos</h1>
+    <div className="product-list">
+      <div className="product-list__header">
+        <h1>Catálogo de Productos</h1>
         <input
+          className="product-list__search"
           type="text"
           placeholder="Buscar productos..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '20px',
-            border: '1px solid #ddd',
-            fontSize: '0.95rem',
-            width: '240px',
-            outline: 'none',
-          }}
         />
       </div>
-      <p style={{ color: '#888', marginBottom: '1.5rem' }}>{filtered.length} productos encontrados</p>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-        gap: '1.25rem',
-      }}>
+      <p className="product-list__count">{filtered.length} productos encontrados</p>
+      <div className="product-list__grid">
         {filtered.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}

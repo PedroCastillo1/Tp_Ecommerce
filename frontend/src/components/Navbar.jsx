@@ -1,55 +1,30 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCart } from '../hooks/useContext/CartContext';
+import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
+  const { itemCount } = useCart();
 
-  const navStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 2rem',
-    height: '64px',
-    background: '#1a1a2e',
-    color: '#fff',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-  };
-
-  const logoStyle = {
-    fontSize: '1.4rem',
-    fontWeight: '700',
-    color: '#e94560',
-    textDecoration: 'none',
-    letterSpacing: '1px',
-  };
-
-  const linksStyle = {
-    display: 'flex',
-    gap: '1.5rem',
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-  };
-
-  const linkStyle = (path) => ({
-    color: location.pathname === path ? '#e94560' : '#ccc',
-    textDecoration: 'none',
-    fontWeight: location.pathname === path ? '600' : '400',
-    fontSize: '0.95rem',
-    transition: 'color 0.2s',
-  });
+  const linkClass = (path) =>
+    `navbar__link${location.pathname === path ? ' navbar__link--active' : ''}`;
 
   return (
-    <nav style={navStyle}>
-      <Link to="/" style={logoStyle}>🛒 TpEcommerce</Link>
-      <ul style={linksStyle}>
-        <li><Link to="/" style={linkStyle('/')}>Inicio</Link></li>
-        <li><Link to="/products" style={linkStyle('/products')}>Productos</Link></li>
-        <li><Link to="/cart" style={linkStyle('/cart')}>Carrito</Link></li>
-        <li><Link to="/login" style={linkStyle('/login')}>Login</Link></li>
+    <nav className="navbar">
+      <Link to="/" className="navbar__logo">🛒 TpEcommerce</Link>
+      <ul className="navbar__links">
+        <li><Link to="/" className={linkClass('/')}>Inicio</Link></li>
+        <li><Link to="/products" className={linkClass('/products')}>Productos</Link></li>
+        <li>
+          <span className="navbar__cart-wrapper">
+            <Link to="/cart" className={linkClass('/cart')}>
+              Carrito
+              {itemCount > 0 && <span className="navbar__badge">{itemCount}</span>}
+            </Link>
+          </span>
+        </li>
+        <li><Link to="/login" className={linkClass('/login')}>Mi cuenta</Link></li>
       </ul>
     </nav>
   );

@@ -1,53 +1,45 @@
-// No necesitamos una URL de API para esta simulación.
+const API = 'http://localhost:8080/api/auth';
 
 export const authService = {
-  /**
-   * Simula una función de login.
-   * @param {object} credentials - Objeto con email y password.
-   * @returns {Promise<object>} - Promesa que resuelve con el usuario y un token falso si es exitoso.
-   * @throws {Error} - Lanza un error si las credenciales son incorrectas.
-   */
   login: async (credentials) => {
-    console.log('Simulando login con:', credentials);
+    const response = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+    });
 
-    // Simulamos una pequeña demora de red para que parezca más real.
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // --- Lógica de la simulación ---
-    // Comprobamos las credenciales contra valores fijos.
-    // Usuario: user@example.com
-    // Contraseña: password
-    if (credentials.email === 'user@example.com' && credentials.password === 'password') {
-      // Si las credenciales son correctas, devolvemos un usuario y un token falsos.
-      const fakeUser = {
-        id: 1,
-        nombre: 'Usuario de Prueba',
-        email: 'user@example.com',
-      };
-      const fakeToken = 'fake-jwt-token-for-simulation-12345';
-      
-      console.log('Login simulado ¡exitoso!');
-      return { user: fakeUser, token: fakeToken };
-    } else {
-      // Si las credenciales son incorrectas, lanzamos un error, como haría un servidor real.
-      console.log('Login simulado ¡fallido!');
-      throw new Error('Usuario o contraseña incorrectos.');
+    if (!response.ok) {
+      const msg = await response.text();
+      throw new Error(msg || 'Usuario o contraseña incorrectos.');
     }
+
+    // El backend devuelve el JWT como texto plano
+    const token = await response.text();
+    return { token };
   },
 
-  /**
-   * Simula la obtención del usuario actual a partir de un token.
-   */
-  getCurrentUser: async (token) => {
-    // Para esta simulación, si el token es el que generamos, devolvemos el usuario.
-    if (token === 'fake-jwt-token-for-simulation-12345') {
-      return {
-        id: 1,
-        nombre: 'Usuario de Prueba',
-        email: 'user@example.com',
-      };
+  register: async (data) => {
+    const response = await fetch(`${API}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const msg = await response.text();
+      throw new Error(msg || 'Error al registrarse.');
     }
-    // Si el token no es válido (o no hay), no devolveemos nada.
-    return null;
-  }
+
+    return await response.text();
+  },
+
+  getCurrentUser: async (token) => {
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return { email: payload.sub || payload.email };
+    } catch {
+      return null;
+    }
+  },
 };

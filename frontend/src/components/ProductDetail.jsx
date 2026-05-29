@@ -1,132 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../hooks/useContext/CartContext';
-import defaultImage from '../assets/imgXdefault.jpg';
+import './ProductDetail.css';
+
+const DEFAULT_IMAGE = 'https://placehold.co/500x400?text=Sin+imagen';
 
 const ProductDetail = () => {
   const { addToCart } = useCart();
-  
-  // useParams es un hook de React Router que extrae los parámetros de la URL.
-  // En este caso, desestructura el objeto devuelto para obtener el 'id' del producto.
-  // Por ejemplo, si la URL es /products/123, useParams devolverá { id: '123' }.
   const { id } = useParams();
-  
-  // useNavigate es un hook que proporciona una función para navegar programáticamente.
-  // La función 'navigate' se puede usar para redirigir al usuario a otras rutas.
-  const navigate = useNavigate();
-  
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        //http://localhost:8080/api/productos/{id}
-        // const response = await fetch(`http://localhost:3000/productos/${id}`);
-        const response = await fetch(`http://localhost:8080/api/productos/${id}`, {
-          // Especificamos el método HTTP a utilizar
-          method: 'GET',
-          
-          headers: {
-            // Indica al servidor que esperamos recibir JSON como respuesta
-            'Accept': 'application/json',
-            
-            // Indica al servidor que estamos enviando datos en formato JSON
-            'Content-Type': 'application/json',
-            
-            // Envía el token JWT si existe en localStorage (necesario para rutas protegidas)
-            'Authorization': localStorage.getItem('token')
-          },
-          
-          // Permite el envío de cookies y credenciales de autenticación
-          // Esto es necesario porque en el backend tienes configuration.setAllowCredentials(true)
-          credentials: 'include',
-          
-          // Especifica que esta es una petición CORS (Cross-Origin Resource Sharing)
-          // Útil cuando el frontend y backend están en diferentes puertos/dominios
-          mode: 'cors'
-        });
-        if (!response.ok) {
-          throw new Error('Producto no encontrado');
-        }
-        const data = await response.json();
-        setProduct(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
+    const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = token;
 
-    fetchProduct();
+    fetch(`http://localhost:8080/api/productos/${id}`, { method: 'GET', headers, credentials: 'include', mode: 'cors' })
+      .then(r => {
+        if (!r.ok) throw new Error('Producto no encontrado');
+        return r.json();
+      })
+      .then(data => { setProduct(data); setLoading(false); })
+      .catch(err => { setError(err.message); setLoading(false); });
   }, [id]);
 
   const handleAddToCart = () => {
     addToCart(product);
-
-    // Aquí se invoca la función 'navigate' para redirigir al usuario.
-    // Después de agregar un producto al carrito, se le lleva a la página '/cart'.
-    navigate('/cart');
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
 
-  if (loading) return <div>Cargando producto...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!product) return <div>No se encontró el producto</div>;
+  if (loading) return <div className="loading-state">Cargando producto...</div>;
+  if (error)   return <div className="error-state">Error: {error}</div>;
+  if (!product) return <div className="error-state">No se encontró el producto</div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>{product.nombre}</h1>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '2rem',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
+    <div className="product-detail">
+      <Link to="/products" className="product-detail__back">← Volver al catálogo</Link>
+
+      <div className="product-detail__grid">
+        <img
+          className="product-detail__img"
+          src={product.imageUrl || DEFAULT_IMAGE}
+          alt={product.name}
+          onError={e => { e.target.src = DEFAULT_IMAGE; }}
+        />
+
         <div>
-          <img 
-            src={product.imagen || defaultImage}
-            alt={product.nombre}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'cover',
-              borderRadius: '8px'
-            }}
-          />
-        </div>
-        <div>
-          <h2 style={{ color: '#2D3277', fontSize: '2rem', marginBottom: '1rem' }}>
-            ${product.precio.toLocaleString('es-AR')}
-          </h2>
-          <p style={{ fontSize: '1.1rem', lineHeight: '1.6', color: '#666' }}>
-            {product.descripcion}
-          </p>
-          <button
-            onClick={handleAddToCart}
-            style={{
-              backgroundColor: '#2D3277',
-              color: 'white',
-              padding: '1rem 2rem',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              marginTop: '1rem'
-            }}
-          >
-            Agregar al Carrito
-          </button>
-          <div style={{ marginTop: '2rem' }}>
-            <h3>Detalles del producto</h3>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {product.detalles && Object.entries(product.detalles).map(([key, value]) => (
-                <li key={key} style={{ margin: '0.5rem 0', color: '#666' }}>
-                  <strong>{key}:</strong> {value}
-                </li>
+          {product.categories?.length > 0 && (
+            <div className="product-detail__categories">
+              {product.categories.map(cat => (
+                <span key={cat.id} className="product-detail__cat">{cat.name}</span>
               ))}
-            </ul>
+            </div>
+          )}
+
+          <h1 className="product-detail__name">{product.name}</h1>
+          <p className="product-detail__price">${Number(product.price).toLocaleString('es-AR')}</p>
+          <p className="product-detail__desc">{product.description}</p>
+
+          <span className={`product-detail__stock ${product.stock > 0 ? 'product-detail__stock--ok' : 'product-detail__stock--out'}`}>
+            {product.stock > 0 ? `✓ Stock disponible (${product.stock})` : '✗ Sin stock'}
+          </span>
+
+          <div className="product-detail__actions">
+            <button
+              className={`product-detail__btn-cart${added ? ' product-detail__btn-cart--added' : ''}`}
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+            >
+              {added ? '✓ Agregado al carrito' : 'Agregar al carrito'}
+            </button>
+            <Link to="/cart" className="product-detail__btn-view">Ver carrito</Link>
           </div>
         </div>
       </div>

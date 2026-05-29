@@ -1,124 +1,69 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../hooks/useContext/CartContext';
-import defaultImage from '../assets/imgXdefault.jpg';
-const Cart = () => {
-  const { cartItems } = useCart();
+import './Cart.css';
 
-  
+const DEFAULT_IMAGE = 'https://placehold.co/100x100?text=?';
+
+const Cart = () => {
+  const { cartItems, removeFromCart, updateQuantity, total, itemCount, clearCart } = useCart();
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>Carrito de Compras</h1>
-      {/* Renderizado condicional con operador lógico AND (&&) */}
-      {/* Si la condición (cartItems.length > 0) es verdadera, se renderiza el elemento <p>. */}
-      {/* Si es falsa, no se renderiza nada. */}
-      {/* true && true -> true */}
-      {/* false && true -> false */}
-      {cartItems.length > 0 && (
-        <p>Tienes {cartItems.length} productos en el carrito</p>
+    <div className="cart">
+      <h1 className="cart__title">🛒 Carrito de Compras</h1>
+      {itemCount > 0 && (
+        <p className="cart__count">{itemCount} {itemCount === 1 ? 'producto' : 'productos'}</p>
       )}
 
-      {/* Renderizado condicional con operador ternario */}
-      {/* Si el carrito está vacío (cartItems.length === 0), muestra un mensaje. */}
-      {/* De lo contrario (? significa 'entonces'), muestra la lista de productos (: significa 'si no'). */}
-      {/* func ? true : false */}
       {cartItems.length === 0 ? (
-        <p>Tu carrito está vacío</p>
+        <div className="cart__empty">
+          <p>Tu carrito está vacío</p>
+          <Link to="/products" className="btn-primary">Ver productos</Link>
+        </div>
       ) : (
-        <>
-          <div style={{ marginBottom: '2rem' }}>
+        <div className="cart__layout">
+          <div>
             {cartItems.map(item => (
-              <div 
-                key={item.id} 
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '100px 1fr auto',
-                  gap: '1rem',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  borderBottom: '1px solid #eee'
-                }}
-              >
-                <img 
-                  src={item.imagen || defaultImage}
-                  alt={item.nombre}
-                  style={{
-                    width: '100px',
-                    height: '100px',
-                    objectFit: 'cover',
-                    borderRadius: '4px'
-                  }}
+              <div key={item.id} className="cart__item">
+                <img
+                  className="cart__item-img"
+                  src={item.imageUrl || DEFAULT_IMAGE}
+                  alt={item.name}
+                  onError={e => { e.target.src = DEFAULT_IMAGE; }}
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 0.5rem 0' }}>{item.nombre}</h3>
-                  <p style={{ margin: '0', color: '#666' }}>
-                    Cantidad: {item.quantity}
-                  </p>
-                  <p style={{ margin: '0.5rem 0', color: '#2D3277', fontWeight: 'bold' }}>
-                    ${(item.precio * item.quantity).toLocaleString('es-AR')}
-                  </p>
+                  <h3 className="cart__item-name">{item.name}</h3>
+                  <p className="cart__item-price">${Number(item.price).toLocaleString('es-AR')} c/u</p>
+                  <div className="cart__qty">
+                    <button className="cart__qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                    <span className="cart__qty-val">{item.quantity}</span>
+                    <button className="cart__qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => removeFromCart(item.id)}
-                  style={{
-                    padding: '0.5rem',
-                    background: 'none',
-                    border: '1px solid #ff4444',
-                    color: '#ff4444',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Eliminar
-                </button>
+                <div>
+                  <p className="cart__item-total">${(Number(item.price) * item.quantity).toLocaleString('es-AR')}</p>
+                  <button className="cart__btn-remove" onClick={() => removeFromCart(item.id)}>Eliminar</button>
+                </div>
               </div>
             ))}
+            <button className="cart__btn-clear" onClick={clearCart}>Vaciar carrito</button>
           </div>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            padding: '1rem',
-            backgroundColor: '#f9f9f9',
-            borderRadius: '4px',
-            marginBottom: '1rem'
-          }}>
+
+          <div className="cart__summary">
+            <h3>Resumen</h3>
+            <div className="cart__summary-row">
+              <span>Subtotal ({itemCount} productos)</span>
+              <span>${total.toLocaleString('es-AR')}</span>
+            </div>
+            <div className="cart__summary-total">
+              <span>Total</span>
+              <span>${total.toLocaleString('es-AR')}</span>
+            </div>
+            <Link to="/checkout" className="cart__btn-checkout">Finalizar compra</Link>
+            <Link to="/products" className="cart__btn-continue">← Seguir comprando</Link>
           </div>
-        </>
+        </div>
       )}
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <Link 
-          to="/products"
-          style={{
-            backgroundColor: '#2D3277',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            textDecoration: 'none'
-          }}
-        >
-          Seguir comprando
-        </Link>
-        {cartItems.length > 0 && (
-          <Link 
-            to="/checkout"
-            style={{
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              textDecoration: 'none'
-            }}
-          >
-            Pagar
-          </Link>
-        )}
-      </div>
     </div>
   );
 };

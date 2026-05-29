@@ -16,6 +16,7 @@ import { CartProvider } from './hooks/useContext/CartContext'
 
 function App() {
   return (
+    <AuthProvider>
     <CartProvider>
       <BrowserRouter>
         <Navbar />
@@ -38,6 +39,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </CartProvider>
+    </AuthProvider>
   )
 }
 
