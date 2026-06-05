@@ -1,23 +1,39 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../hooks/useContext/CartContext';
+
+// REDUX: reemplazamos useCart (Context) por useSelector y useDispatch
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  selectCartItems,
+  selectCartTotal,
+  selectCartItemCount,
+  clearCart,
+} from '../store/cartSlice';
+
 import './Checkout.css';
 
 const Checkout = () => {
-  const { cartItems, total, itemCount, clearCart } = useCart();
+  const dispatch = useDispatch();
+
+  // Leemos los datos del carrito directamente del store de Redux
+  const cartItems = useSelector(selectCartItems);
+  const total     = useSelector(selectCartTotal);
+  const itemCount = useSelector(selectCartItemCount);
+
   const [confirmed, setConfirmed] = useState(false);
 
   const handleConfirm = () => {
     setConfirmed(true);
-    clearCart();
+    // dispatch(clearCart()) -> envia la accion al store para vaciar el carrito
+    dispatch(clearCart());
   };
 
   if (confirmed) {
     return (
       <div className="checkout__confirmed">
-        <div className="checkout__confirmed__icon">✅</div>
-        <h2>¡Compra confirmada!</h2>
-        <p>Gracias por tu compra. Pronto recibirás más información.</p>
+        <div className="checkout__confirmed__icon">ok</div>
+        <h2>Compra confirmada!</h2>
+        <p>Gracias por tu compra. Pronto recibiras mas informacion.</p>
         <Link to="/" className="btn-primary">Volver a la tienda</Link>
       </div>
     );
@@ -29,7 +45,7 @@ const Checkout = () => {
 
       {cartItems.length === 0 ? (
         <div className="checkout__empty">
-          <p>No tenés productos en el carrito</p>
+          <p>No tenes productos en el carrito</p>
           <Link to="/products" className="btn-primary">Ir a la tienda</Link>
         </div>
       ) : (
@@ -55,7 +71,7 @@ const Checkout = () => {
             <button className="checkout__btn-confirm" onClick={handleConfirm}>
               Confirmar compra
             </button>
-            <Link to="/cart" className="checkout__btn-back">← Volver al carrito</Link>
+            <Link to="/cart" className="checkout__btn-back">Volver al carrito</Link>
           </div>
         </div>
       )}

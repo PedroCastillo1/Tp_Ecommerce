@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useCart } from '../hooks/useContext/CartContext';
+
+// REDUX — reemplazamos useCart por useDispatch para despachar la acción addToCart
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../store/cartSlice';
+
 import './ProductDetail.css';
 
 const DEFAULT_IMAGE = 'https://placehold.co/500x400?text=Sin+imagen';
 
 const ProductDetail = () => {
-  const { addToCart } = useCart();
+  // dispatch es la función que usamos para enviar acciones al store
+  const dispatch = useDispatch();
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +33,8 @@ const ProductDetail = () => {
   }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    // dispatch(addToCart(product)) → envía el producto al cartSlice del store
+    dispatch(addToCart(product));
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
