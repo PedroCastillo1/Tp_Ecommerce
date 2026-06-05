@@ -1,60 +1,99 @@
 // favoriteSlice.js
-// REDUX — Slice de Favoritos
+// REDUX — Slice de Favoritos con integracion al backend
 //
-// Igual que cartSlice pero para los productos favoritos.
-// Reemplaza al FavoriteContext que usabamos con useContext.
+// Usa createAsyncThunk para sincronizar favoritos con la DB.
+// Endpoints: GET/POST/DELETE /api/favoritos/{userId}/...
 
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { favoriteApiService } from "../services/favoriteApiService";
+
+// ── Async Thunks ──────────────────────────────────────────────────────────
+
+// Carga los favoritos del usuario desde la DB
+export const fetchFavorites = createAsyncThunk(
+  "favorite/fetchFavorites",
+  async ({ userId, token }) => {
+    const items = await favoriteApiService.getFavorites(userId, token);
+    // El backend devuelve Favorite con { id, product }
+    // Extraemos el product para usar en los componentes
+    return items.map((fav) => fav.product);
+  }
+);
+
+// Agrega o quita un favorito en la DB (toggle)
+export const toggleFavoriteAsync = createAsyncThunk(
+  "favorite/toggleFavoriteAsync",
+  async ({ product, userId, token, isFav }) => {
+    if (isFav) {
+      await favoriteApiService.removeFavorite(userId, product.id, token);
+      return { product, removed: true };
+    } else {
+      await favoriteApiService.addFavorite(userId, product.id, token);
+      return { product, removed: false };
+    }
+  }
+);
+
+// ── Slice ─────────────────────────────────────────────────────────────────
 
 const favoriteSlice = createSlice({
-  name: 'favorite',
-
-  // Estado inicial: lista de favoritos vacia
+  name: "favorite",
   initialState: {
     favoriteItems: [],
+    loading: false,
+    error: null,
   },
 
   reducers: {
-    // ── addToFavorite ──────────────────────────────────────────────────────
-    // Agrega un producto a favoritos. Si ya existe, no lo duplica.
-    addToFavorite(state, action) {
-      const product = action.payload;
-      const yaExiste = state.favoriteItems.find(item => item.id === product.id);
-      if (!yaExiste) {
-        state.favoriteItems.push(product);
-      }
-    },
-
-    // ── removeFromFavorite ─────────────────────────────────────────────────
-    // Elimina un producto de favoritos por su id.
-    removeFromFavorite(state, action) {
-      const productId = action.payload;
-      state.favoriteItems = state.favoriteItems.filter(item => item.id !== productId);
-    },
-
-    // ── toggleFavorite ─────────────────────────────────────────────────────
-    // Si ya es favorito lo quita, si no lo agrega.
+    // Accion local de toggle (sin backend, por si no hay usuario)
     toggleFavorite(state, action) {
       const product = action.payload;
-      const existe = state.favoriteItems.find(item => item.id === product.id);
+      const existe = state.favoriteItems.find((item) => item.id === product.id);
       if (existe) {
-        state.favoriteItems = state.favoriteItems.filter(item => item.id !== product.id);
+        state.favoriteItems = state.favoriteItems.filter(
+          (item) => item.id !== product.id
+        );
       } else {
         state.favoriteItems.push(product);
       }
     },
   },
+
+  extraReducers: (builder) => {
+    // fetchFavorites: carga favoritos desde la DB
+    builder
+      .addCase(fetchFavorites.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchFavorites.fulfilled, (state, action) => {
+        state.loading = false;
+        state.favoriteItems = action.payload;
+      })
+      .addCase(fetchFavorites.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+
+    // toggleFavoriteAsync: agrega o quita en DB y actualiza estado local
+    builder.addCase(toggleFavoriteAsync.fulfilled, (state, action) => {
+      const { product, removed } = action.payload;
+      if (removed) {
+        state.favoriteItems = state.favoriteItems.filter(
+          (item) => item.id !== product.id
+        );
+      } else {
+        const existe = state.favoriteItems.find((i) => i.id === product.id);
+        if (!existe) state.favoriteItems.push(product);
+      }
+    });
+  },
 });
 
-// Exportamos las acciones para usar con useDispatch
-export const { addToFavorite, removeFromFavorite, toggleFavorite } = favoriteSlice.actions;
+export const { toggleFavorite } = favoriteSlice.actions;
 
-// ── Selectores ─────────────────────────────────────────────────────────────
-// Devuelve todos los productos favoritos
+// ── Selectores ────────────────────────────────────────────────────────────
 export const selectFavoriteItems = (state) => state.favorite.favoriteItems;
-
-// Devuelve true si el producto con ese id ya es favorito
-export const selectIsFavorite = (productId) => (state) =>
-  state.favorite.favoriteItems.some(item => item.id === productId);
+export const selectIsFavorite    = (productId) => (state) =>
+  state.favorite.favoriteItems.some((item) => item.id === productId);
 
 export default favoriteSlice.reducer;

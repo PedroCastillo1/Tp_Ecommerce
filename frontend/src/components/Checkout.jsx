@@ -1,31 +1,27 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-
-// REDUX: reemplazamos useCart (Context) por useSelector y useDispatch
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  selectCartItems,
-  selectCartTotal,
-  selectCartItemCount,
-  clearCart,
-} from '../store/cartSlice';
-
-import './Checkout.css';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { selectCartItems, selectCartTotal, selectCartItemCount, checkoutAsync, clearCart } from "../store/cartSlice";
+import { useAuth } from "../features/auth/context/AuthContext";
+import "./Checkout.css";
 
 const Checkout = () => {
   const dispatch = useDispatch();
-
-  // Leemos los datos del carrito directamente del store de Redux
+  const { user, token } = useAuth();
   const cartItems = useSelector(selectCartItems);
   const total     = useSelector(selectCartTotal);
   const itemCount = useSelector(selectCartItemCount);
-
   const [confirmed, setConfirmed] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (user && token) {
+      // Usuario logueado: hace checkout en la DB (descuenta stock)
+      await dispatch(checkoutAsync({ userId: user.id, token }));
+    } else {
+      // Sin login: solo vacia el carrito local
+      dispatch(clearCart());
+    }
     setConfirmed(true);
-    // dispatch(clearCart()) -> envia la accion al store para vaciar el carrito
-    dispatch(clearCart());
   };
 
   if (confirmed) {
@@ -42,7 +38,6 @@ const Checkout = () => {
   return (
     <div className="checkout">
       <h1>Confirmar Compra</h1>
-
       {cartItems.length === 0 ? (
         <div className="checkout__empty">
           <p>No tenes productos en el carrito</p>
@@ -52,22 +47,21 @@ const Checkout = () => {
         <div className="checkout__layout">
           <div className="checkout__items">
             <h3>Tu pedido ({itemCount} productos)</h3>
-            {cartItems.map(item => (
+            {cartItems.map((item) => (
               <div key={item.id} className="checkout__item">
                 <div className="checkout__item-left">
                   <span className="checkout__item-qty">{item.quantity}x</span>
                   <span className="checkout__item-name">{item.name}</span>
                 </div>
                 <span className="checkout__item-subtotal">
-                  ${(Number(item.price) * item.quantity).toLocaleString('es-AR')}
+                  ${(Number(item.price) * item.quantity).toLocaleString("es-AR")}
                 </span>
               </div>
             ))}
           </div>
-
           <div className="checkout__panel">
             <h3>Total a pagar</h3>
-            <div className="checkout__total">${total.toLocaleString('es-AR')}</div>
+            <div className="checkout__total">${total.toLocaleString("es-AR")}</div>
             <button className="checkout__btn-confirm" onClick={handleConfirm}>
               Confirmar compra
             </button>

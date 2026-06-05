@@ -1,17 +1,14 @@
 // store.js
-// REDUX — La "central" o "almacen" global del estado
-//
-// Ahora registramos dos slices:
-//   cart     → estado del carrito (cartSlice)
-//   favorite → estado de favoritos (favoriteSlice)
+// REDUX — Store central
+// El backend es la fuente de verdad cuando el usuario esta logueado.
+// Al hacer login, AppContent dispara fetchCart y fetchFavorites para cargar desde la DB.
 
-import { configureStore } from '@reduxjs/toolkit';
-import cartReducer from './cartSlice';
-import favoriteReducer from './favoriteSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import cartReducer from "./cartSlice";
+import favoriteReducer from "./favoriteSlice";
 
 const store = configureStore({
   reducer: {
-    // Cada clave es el nombre con el que accedemos al estado en los selectores
     cart: cartReducer,
     favorite: favoriteReducer,
   },

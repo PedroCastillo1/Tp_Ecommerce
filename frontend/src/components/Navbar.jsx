@@ -19,33 +19,31 @@ const Navbar = () => {
   const favoriteItems = useSelector(selectFavoriteItems);
 
   const linkClass = (path) =>
-    'navbarlink' + (location.pathname === path ? ' navbarlink--active' : '');
+    'navbar__link' + (location.pathname === path ? ' navbar__link--active' : '');
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbarlogo">TpEcommerce</Link>
-      <ul className="navbarlinks">
+      <Link to="/" className="navbar__logo">TpEcommerce</Link>
+      <ul className="navbar__links">
         <li><Link to="/" className={linkClass('/')}>Inicio</Link></li>
         <li><Link to="/products" className={linkClass('/products')}>Productos</Link></li>
 
         <li>
-          <span className="navbarcart-wrapper">
+          <span className="navbar__cart-wrapper">
             <Link to="/favorites" className={linkClass('/favorites')}>
               Favoritos
-              {/* Badge de favoritos — dato del store Redux */}
               {favoriteItems.length > 0 && (
-                <span className="navbarbadge">{favoriteItems.length}</span>
+                <span className="navbar__badge">{favoriteItems.length}</span>
               )}
             </Link>
           </span>
         </li>
 
         <li>
-          <span className="navbarcart-wrapper">
+          <span className="navbar__cart-wrapper">
             <Link to="/cart" className={linkClass('/cart')}>
               Carrito
-              {/* Badge del carrito — dato del store Redux */}
-              {itemCount > 0 && <span className="navbarbadge">{itemCount}</span>}
+              {itemCount > 0 && <span className="navbar__badge">{itemCount}</span>}
             </Link>
           </span>
         </li>
