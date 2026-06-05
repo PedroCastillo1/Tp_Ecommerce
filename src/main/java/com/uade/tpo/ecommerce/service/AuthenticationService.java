@@ -1,5 +1,8 @@
 package com.uade.tpo.ecommerce.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.uade.tpo.ecommerce.model.RegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,27 +30,28 @@ public class AuthenticationService {
     private AuthenticationManager authenticationManager;
 
     public String register(RegisterRequest request) {
-        try {
-            // Mapeamos del DTO a la Entidad
-            User user = new User();
-            user.setNombre(request.getNombre());
-            user.setApellido(request.getApellido());
-            user.setEmail(request.getEmail());
-            user.setUsername(request.getUsername());
-            user.setFechaNacimiento(request.getFechaNacimiento());
-            user.setSexo(request.getSexo());
-
-            // Cifrado de contraseña
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setRole(Role.USER);
-
-            userRepository.save(user);
-
-            // Generamos el token de acceso
-            return jwtService.generateToken(user);
-        } catch (Exception e) {
-            throw new RuntimeException("Error al procesar el registro: " + e.getMessage());
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("El email ya está registrado.");
         }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("El nombre de usuario ya está en uso.");
+        }
+
+        User user = new User();
+        user.setNombre(request.getNombre());
+        user.setApellido(request.getApellido());
+        user.setEmail(request.getEmail());
+        user.setUsername(request.getUsername());
+        user.setFechaNacimiento(request.getFechaNacimiento());
+        user.setSexo(request.getSexo());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.USER);
+
+        userRepository.save(user);
+
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("userId", user.getId());
+        return jwtService.generateToken(extraClaims, user);
     }
 
     public String login(String email, String password) {
@@ -56,7 +60,11 @@ public class AuthenticationService {
                 new UsernamePasswordAuthenticationToken(email, password)
             );
             User user = userRepository.findByEmail(email).orElseThrow();
-            return jwtService.generateToken(user);
+
+            // Incluimos el ID del usuario en el token
+            Map<String, Object> extraClaims = new HashMap<>();
+            extraClaims.put("userId", user.getId());
+            return jwtService.generateToken(extraClaims, user);
         } catch (Exception e) {
             throw new RuntimeException("Credenciales inválidas o error de servidor");
         }

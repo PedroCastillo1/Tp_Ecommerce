@@ -1,5 +1,6 @@
 package com.uade.tpo.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,6 +20,7 @@ public class CartItem {
     @ManyToOne
     private Product product;
 
+    @JsonIgnore
     @ManyToOne
     private User user; // Para saber de quién es este carrito
 

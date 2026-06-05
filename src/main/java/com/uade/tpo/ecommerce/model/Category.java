@@ -1,5 +1,6 @@
 package com.uade.tpo.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,6 +23,7 @@ public class Category {
     @Column(unique = true)
     private String name;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "categories")
     private java.util.Set<Product> products = new java.util.HashSet<>();
 

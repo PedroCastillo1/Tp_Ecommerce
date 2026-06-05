@@ -1,5 +1,6 @@
 package com.uade.tpo.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,7 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -42,6 +44,7 @@ public class User implements UserDetails {
 
     public User() {}
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         try {
@@ -51,20 +54,25 @@ public class User implements UserDetails {
         }
     }
 
+    @JsonIgnore
     @Override
     public String getUsername() {
         return email; // Usamos el email como identificador para el login
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() { return true; }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() { return true; }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() { return true; }
 
+    @JsonIgnore
     @Override
     public boolean isEnabled() { return true; }
 }
