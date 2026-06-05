@@ -1,49 +1,47 @@
 // Favorite.jsx
-// Demuestra: useContext (useFavorite), useNavigate, .map,
-//            renderizado condicional, operadores ternarios
+// REDUX (useSelector + useDispatch para favoritos)
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useFavorite } from '../hooks/useContext/FavoriteContext';
+
+// REDUX: reemplazamos useFavorite (Context) por useSelector y useDispatch
+import { useSelector, useDispatch } from 'react-redux';
+import { selectFavoriteItems, removeFromFavorite } from '../store/favoriteSlice';
+
 import ProductCard from './ProductCard';
 import './Favorite.css';
 
 const Favorite = () => {
-  // useNavigate: permite navegar programáticamente
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // useContext a través del custom hook useFavorite
-  const { favoriteItems, removeFromFavorite } = useFavorite();
+  // Leemos los favoritos directamente del store Redux
+  const favoriteItems = useSelector(selectFavoriteItems);
 
-  // useNavigate: al clickear "Ver detalle" navega al producto
   const handleVerDetalle = (id) => {
-    navigate(`/products/${id}`);
+    navigate(/products/${id});
   };
 
   return (
     <div className="favorite">
-      <h1 className="favorite__title">❤️ Mis Favoritos</h1>
+      <h1 className="favoritetitle">Mis Favoritos</h1>
 
-      {/* Renderizado condicional con && */}
       {favoriteItems.length > 0 && (
-        <p className="favorite__count">
-          {/* Operador ternario */}
+        <p className="favoritecount">
           {favoriteItems.length} {favoriteItems.length === 1 ? 'producto guardado' : 'productos guardados'}
         </p>
       )}
 
-      {/* Operador ternario: lista vacía vs grilla de productos */}
       {favoriteItems.length === 0 ? (
-        <div className="favorite__empty">
-          <p>Todavía no agregaste productos a favoritos</p>
+        <div className="favoriteempty">
+          <p>Todavia no agregaste productos a favoritos</p>
           <Link to="/products" className="btn-primary">Explorar productos</Link>
         </div>
       ) : (
-        <div className="favorite__grid">
-          {/* .map sobre favoriteItems */}
+        <div className="favoritegrid">
           {favoriteItems.map(product => (
             <div key={product.id} className="favorite__item">
-              {/* ProductCard usa useContext internamente (useFavorite, useCart) */}
+              {/* ProductCard ahora usa Redux internamente para favoritos y carrito */}
               <ProductCard product={product} />
             </div>
           ))}

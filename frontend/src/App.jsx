@@ -2,16 +2,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
 
 // REDUX — Provider y store
-// Provider es el componente que le da acceso al store a TODA la app.
-// Sin el, ningun componente podria usar useSelector ni useDispatch.
+// FavoriteProvider ya no es necesario, favoritos ahora vive en Redux
 import { Provider } from 'react-redux'
 import store from './store/store'
 
 // Auth sigue en Context porque maneja llamadas async a la API (login/register)
 import { AuthProvider } from './features/auth/context/AuthContext'
-
-// FavoriteProvider se mantiene por ahora — se migra a Redux en el Push 2
-import { FavoriteProvider } from './hooks/useContext/FavoriteContext'
 
 import LoginJWTContext from './components/LoginJWTContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -28,37 +24,37 @@ import FormularioPagoReactForm from './formularios/FormularioPagoReactForm'
 
 function App() {
   return (
+    // Provider unico envuelve toda la app — da acceso al store a todos los componentes
     <Provider store={store}>
+      {/* AuthProvider sigue en Context (maneja async JWT) */}
       <AuthProvider>
-        <FavoriteProvider>
-          <BrowserRouter>
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<ProductList />} />
-              <Route path="/products/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/login" element={<LoginJWTContext />} />
-              <Route path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/favorites"
-                element={
-                  <ProtectedRoute>
-                    <Favorite />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/formValido" element={<FormularioValidado />} />
-              <Route path="/formPago" element={<FormularioPago />} />
-              <Route path="/formReact" element={<FormularioPagoReactForm />} />
-            </Routes>
-          </BrowserRouter>
-        </FavoriteProvider>
+        <BrowserRouter>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/login" element={<LoginJWTContext />} />
+            <Route path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/favorites"
+              element={
+                <ProtectedRoute>
+                  <Favorite />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/formValido" element={<FormularioValidado />} />
+            <Route path="/formPago" element={<FormularioPago />} />
+            <Route path="/formReact" element={<FormularioPagoReactForm />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </Provider>
   )

@@ -1,53 +1,51 @@
 // Navbar.jsx
-// REDUX (useSelector) + useContext (FavoriteContext), renderizado condicional
+// REDUX (useSelector para carrito Y favoritos), renderizado condicional
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-// REDUX: leemos el contador del carrito desde el store global
+// REDUX: leemos tanto el carrito como los favoritos del store global
 import { useSelector } from 'react-redux';
 import { selectCartItemCount } from '../store/cartSlice';
+import { selectFavoriteItems } from '../store/favoriteSlice';
 
-// Favoritos sigue en Context - se migra a Redux en el Push 2
-import { useFavorite } from '../hooks/useContext/FavoriteContext';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
 
-  // useSelector extrae itemCount del store Redux (no necesitamos un Provider local)
-  const itemCount = useSelector(selectCartItemCount);
-
-  // Favoritos todavia usa Context (se migra en Push 2)
-  const { favoriteItems } = useFavorite();
+  // useSelector extrae los datos del store sin necesitar ningun Provider local
+  const itemCount     = useSelector(selectCartItemCount);
+  const favoriteItems = useSelector(selectFavoriteItems);
 
   const linkClass = (path) =>
-    'navbar__link' + (location.pathname === path ? ' navbar__link--active' : '');
+    'navbarlink' + (location.pathname === path ? ' navbarlink--active' : '');
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar__logo">TpEcommerce</Link>
-      <ul className="navbar__links">
+      <Link to="/" className="navbarlogo">TpEcommerce</Link>
+      <ul className="navbarlinks">
         <li><Link to="/" className={linkClass('/')}>Inicio</Link></li>
         <li><Link to="/products" className={linkClass('/products')}>Productos</Link></li>
 
         <li>
-          <span className="navbar__cart-wrapper">
+          <span className="navbarcart-wrapper">
             <Link to="/favorites" className={linkClass('/favorites')}>
               Favoritos
+              {/* Badge de favoritos — dato del store Redux */}
               {favoriteItems.length > 0 && (
-                <span className="navbar__badge">{favoriteItems.length}</span>
+                <span className="navbarbadge">{favoriteItems.length}</span>
               )}
             </Link>
           </span>
         </li>
 
         <li>
-          <span className="navbar__cart-wrapper">
+          <span className="navbarcart-wrapper">
             <Link to="/cart" className={linkClass('/cart')}>
               Carrito
-              {/* useSelector nos da itemCount del store Redux */}
-              {itemCount > 0 && <span className="navbar__badge">{itemCount}</span>}
+              {/* Badge del carrito — dato del store Redux */}
+              {itemCount > 0 && <span className="navbarbadge">{itemCount}</span>}
             </Link>
           </span>
         </li>

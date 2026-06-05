@@ -1,43 +1,49 @@
 // ProductCard.jsx
-// Demuestra: useContext (useFavorite), renderizado condicional, operador ternario
+// REDUX (useSelector + useDispatch para favoritos)
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useFavorite } from '../hooks/useContext/FavoriteContext';
+
+// REDUX: reemplazamos useFavorite (Context) por useSelector y useDispatch
+import { useSelector, useDispatch } from 'react-redux';
+import { toggleFavorite, selectIsFavorite } from '../store/favoriteSlice';
+
 import './ProductCard.css';
 
 const DEFAULT_IMAGE = 'https://placehold.co/300x200?text=Sin+imagen';
 
 const ProductCard = ({ product, badge }) => {
-  // useContext a través del custom hook useFavorite
-  const { toggleFavorite, isFavorite } = useFavorite();
+  const dispatch = useDispatch();
 
-  const badgeClass = badge === '🔥 Oferta'
+  // selectIsFavorite(product.id) es un selector con parametro
+  // devuelve true si el producto ya esta en favoritos
+  const esFavorito = useSelector(selectIsFavorite(product.id));
+
+  const badgeClass = badge === 'Oferta'
     ? 'product-card__badge product-card__badge--oferta'
     : 'product-card__badge product-card__badge--top';
 
-  // Operador ternario: corazón lleno si es favorito, vacío si no
-  const heartIcon = isFavorite(product.id) ? '❤️' : '🤍';
+  // Operador ternario: corazon lleno si es favorito, vacio si no
+  const heartIcon = esFavorito ? 'liked' : 'like';
 
   const handleFavClick = (e) => {
-    // Evita que el click en el corazón navegue al detalle del producto
     e.preventDefault();
-    toggleFavorite(product);
+    // dispatch(toggleFavorite(product)) -> envia la accion al favoriteSlice
+    dispatch(toggleFavorite(product));
   };
 
   return (
     <Link to={`/products/${product.id}`} className="product-card__link">
       <div className="product-card">
-        {/* Renderizado condicional: solo muestra badge si existe */}
         {badge && <span className={badgeClass}>{badge}</span>}
 
-        {/* Botón de favorito — usa addToFavorite del contexto */}
+        {/* Boton de favorito — usa toggleFavorite del store Redux */}
         <button
           className="product-card__fav"
           onClick={handleFavClick}
-          title={isFavorite(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          title={esFavorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
         >
-          {heartIcon}
+          {esFavorito ? 'Fav' : 'No fav'}
         </button>
 
         <img
@@ -58,16 +64,13 @@ const ProductCard = ({ product, badge }) => {
             <span className="product-card__price">
               ${Number(product.price).toLocaleString('es-AR')}
             </span>
-            {/* Operador ternario para clase de stock */}
             <span className={`product-card__stock ${product.stock > 0 ? 'product-card__stock--ok' : 'product-card__stock--out'}`}>
               {product.stock > 0 ? `Stock: ${product.stock}` : 'Sin stock'}
             </span>
           </div>
 
-          {/* Renderizado condicional con && */}
           {product.categories?.length > 0 && (
             <div className="product-card__categories">
-              {/* .map sobre categorías */}
               {product.categories.map(cat => (
                 <span key={cat.id} className="product-card__cat">{cat.name}</span>
               ))}
