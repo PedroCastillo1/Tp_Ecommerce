@@ -1,41 +1,47 @@
-// favoriteApiService.js
-// Llamadas HTTP al backend para favoritos
-// Endpoints: GET /api/favoritos/{userId}
-//            POST /api/favoritos/{userId}/agregar/{productId}
-//            DELETE /api/favoritos/{userId}/eliminar/{productId}
+// ## SERVICIO API — Favoritos
+// ##
+// ## Encapsula todas las llamadas HTTP al backend para favoritos.
+// ## Usa credentials: 'include' para enviar la cookie JWT automáticamente.
+// ##
+// ## Endpoints que usa:
+// ##   GET    /api/favoritos/{userId}                          → obtener favoritos
+// ##   POST   /api/favoritos/{userId}/agregar/{productId}      → agregar favorito
+// ##   DELETE /api/favoritos/{userId}/eliminar/{productId}     → quitar favorito
 
 const BASE_URL = 'http://localhost:8080';
 
-const headers = (token) => ({
+const headers = {
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${token}`,
-});
+};
 
 export const favoriteApiService = {
-  // Obtiene los favoritos del usuario desde la DB
-  getFavorites: async (userId, token) => {
+  // ## Obtiene todos los favoritos del usuario desde la DB
+  // ## Devuelve: Favorite[] { id, product }
+  getFavorites: async (userId) => {
     const res = await fetch(`${BASE_URL}/api/favoritos/${userId}`, {
-      headers: headers(token),
+      headers,
+      credentials: 'include',
     });
     if (!res.ok) throw new Error('Error al obtener favoritos');
     return res.json();
   },
 
-  // Agrega un producto a favoritos en la DB
-  addFavorite: async (userId, productId, token) => {
+  // ## Agrega un producto a la lista de favoritos en la DB
+  // ## Devuelve: el Favorite creado { id, product }
+  addFavorite: async (userId, productId) => {
     const res = await fetch(
       `${BASE_URL}/api/favoritos/${userId}/agregar/${productId}`,
-      { method: 'POST', headers: headers(token) }
+      { method: 'POST', headers, credentials: 'include' }
     );
     if (!res.ok) throw new Error('Error al agregar favorito');
     return res.json();
   },
 
-  // Elimina un producto de favoritos en la DB
-  removeFavorite: async (userId, productId, token) => {
+  // ## Elimina un producto de la lista de favoritos en la DB
+  removeFavorite: async (userId, productId) => {
     const res = await fetch(
       `${BASE_URL}/api/favoritos/${userId}/eliminar/${productId}`,
-      { method: 'DELETE', headers: headers(token) }
+      { method: 'DELETE', headers, credentials: 'include' }
     );
     if (!res.ok) throw new Error('Error al eliminar favorito');
   },

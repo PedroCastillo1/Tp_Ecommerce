@@ -1,33 +1,39 @@
-// Navbar.jsx
-// REDUX (useSelector para carrito Y favoritos), renderizado condicional
+// ## COMPONENTE — Navbar (Barra de Navegación)
+// ##
+// ## Muestra los links de navegación con badges dinámicos para:
+// ##   - Favoritos: cantidad de productos marcados como favoritos
+// ##   - Carrito: cantidad total de unidades en el carrito
+// ##
+// ## Usa useSelector de Redux para leer el estado global (no necesita props).
+// ## Resalta el link activo comparando la ruta actual con useLocation().
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-
-// REDUX: leemos tanto el carrito como los favoritos del store global
 import { useSelector } from 'react-redux';
 import { selectCartItemCount } from '../store/cartSlice';
-import { selectFavoriteItems } from '../store/favoriteSlice';
-
+import { selectFavoriteItems  } from '../store/favoriteSlice';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
 
-  // useSelector extrae los datos del store sin necesitar ningun Provider local
-  const itemCount     = useSelector(selectCartItemCount);
-  const favoriteItems = useSelector(selectFavoriteItems);
+  // ## Leemos el store global para mostrar los contadores en tiempo real
+  const itemCount     = useSelector(selectCartItemCount); // ## total de unidades en el carrito
+  const favoriteItems = useSelector(selectFavoriteItems); // ## array de productos favoritos
 
+  // ## Devuelve la clase CSS base + clase activa si la ruta coincide
   const linkClass = (path) =>
     'navbar__link' + (location.pathname === path ? ' navbar__link--active' : '');
 
   return (
     <nav className="navbar">
       <Link to="/" className="navbar__logo">TpEcommerce</Link>
+
       <ul className="navbar__links">
-        <li><Link to="/" className={linkClass('/')}>Inicio</Link></li>
+        <li><Link to="/"         className={linkClass('/')}>Inicio</Link></li>
         <li><Link to="/products" className={linkClass('/products')}>Productos</Link></li>
 
+        {/* ## Favoritos con badge que muestra la cantidad */}
         <li>
           <span className="navbar__cart-wrapper">
             <Link to="/favorites" className={linkClass('/favorites')}>
@@ -39,6 +45,7 @@ const Navbar = () => {
           </span>
         </li>
 
+        {/* ## Carrito con badge que muestra el total de unidades */}
         <li>
           <span className="navbar__cart-wrapper">
             <Link to="/cart" className={linkClass('/cart')}>
@@ -48,7 +55,8 @@ const Navbar = () => {
           </span>
         </li>
 
-        <li><Link to="/login" className={linkClass('/login')}>Mi cuenta</Link></li>
+        <li><Link to="/perfil" className={linkClass('/perfil')}>Mi perfil</Link></li>
+        <li><Link to="/login"  className={linkClass('/login')}>Mi cuenta</Link></li>
       </ul>
     </nav>
   );

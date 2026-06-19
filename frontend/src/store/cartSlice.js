@@ -1,56 +1,59 @@
-// cartSlice.js
-// REDUX — Slice del Carrito con integracion al backend
-//
-// Usa createAsyncThunk para hacer llamadas a la API del backend.
-// Si el usuario esta logueado, el carrito se sincroniza con la DB.
-// Cada accion tiene tres estados: pending, fulfilled, rejected.
+// ## REDUX SLICE — Carrito de compras
+// ##
+// ## Maneja el estado global del carrito sincronizado con la base de datos.
+// ## Cuando el usuario está logueado, cada acción se refleja en el backend.
+// ## Cuando no está logueado, las acciones son solo locales (en memoria).
+// ##
+// ## Estado: { cartItems: [], loading: false, error: null }
+// ## cartItems: array de productos con { ...product, quantity, cartItemId }
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { cartApiService } from "../services/cartApiService";
 
-// ── Async Thunks (acciones que llaman a la API) ───────────────────────────
+// ── Thunks (acciones asincrónicas que llaman a la API) ────────────────────
 
-// Carga el carrito del usuario desde la DB al iniciar sesion
+// ## Carga el carrito del usuario desde la DB al iniciar sesión
+// ## Se dispara en App.jsx cuando el usuario se autentica
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
-  async ({ userId, token }) => {
-    const items = await cartApiService.getCart(userId, token);
-    // El backend devuelve CartItem con { id, product, quantity }
-    // Lo mapeamos al formato que usan nuestros componentes
+  async ({ userId }) => {
+    const items = await cartApiService.getCart(userId);
+    // ## El backend devuelve CartItem { id, product, quantity }
+    // ## Lo aplanamos para que los componentes accedan directamente a product.*
     return items.map((item) => ({
       ...item.product,
-      quantity: item.quantity,
+      quantity:   item.quantity,
       cartItemId: item.id,
     }));
   }
 );
 
-// Agrega un producto al carrito en la DB
+// ## Agrega un producto al carrito en la DB (cantidad = 1 por defecto)
 export const addToCartAsync = createAsyncThunk(
   "cart/addToCartAsync",
-  async ({ product, userId, token }) => {
-    const item = await cartApiService.addItem(userId, product.id, 1, token);
+  async ({ product, userId }) => {
+    const item = await cartApiService.addItem(userId, product.id, 1);
     return {
       ...item.product,
-      quantity: item.quantity,
+      quantity:   item.quantity,
       cartItemId: item.id,
     };
   }
 );
 
-// Vacia el carrito en la DB
+// ## Vacía el carrito en la DB (DELETE /api/carrito/{userId}/vaciar)
 export const clearCartAsync = createAsyncThunk(
   "cart/clearCartAsync",
-  async ({ userId, token }) => {
-    await cartApiService.clearCart(userId, token);
+  async ({ userId }) => {
+    await cartApiService.clearCart(userId);
   }
 );
 
-// Confirma la compra en la DB
+// ## Confirma la compra: descuenta stock, guarda historial y vacía el carrito
 export const checkoutAsync = createAsyncThunk(
   "cart/checkoutAsync",
-  async ({ userId, token }) => {
-    const total = await cartApiService.checkout(userId, token);
+  async ({ userId }) => {
+    const total = await cartApiService.checkout(userId);
     return total;
   }
 );
@@ -60,86 +63,82 @@ export const checkoutAsync = createAsyncThunk(
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
-    cartItems: [],
-    loading: false,
-    error: null,
+    cartItems: [], // ## array de productos en el carrito
+    loading:   false,
+    error:     null,
   },
 
   reducers: {
-    // Accion local para update de cantidad (sin llamada al backend por ahora)
+    // ## Actualiza la cantidad de un item localmente (sin llamar al backend)
     updateQuantity(state, action) {
       const { id, quantity } = action.payload;
       if (quantity <= 0) {
+        // ## Si la cantidad es 0 o negativa, elimina el item del carrito
         state.cartItems = state.cartItems.filter((item) => item.id !== id);
       } else {
         const item = state.cartItems.find((item) => item.id === id);
         if (item) item.quantity = quantity;
       }
     },
-    // Elimina un item localmente
+
+    // ## Elimina un item del carrito localmente por su id
     removeFromCart(state, action) {
       state.cartItems = state.cartItems.filter(
         (item) => item.id !== action.payload
       );
     },
-    // Vacia el carrito localmente
+
+    // ## Vacía el carrito localmente (sin llamar al backend)
     clearCart(state) {
       state.cartItems = [];
     },
   },
 
-  // extraReducers maneja los estados de los async thunks
   extraReducers: (builder) => {
-    // fetchCart: carga el carrito desde la DB
+    // ## fetchCart: mientras carga muestra loading, al terminar guarda los items
     builder
-      .addCase(fetchCart.pending, (state) => {
-        state.loading = true;
-      })
+      .addCase(fetchCart.pending,   (state)         => { state.loading = true; })
       .addCase(fetchCart.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loading   = false;
         state.cartItems = action.payload;
       })
-      .addCase(fetchCart.rejected, (state, action) => {
+      .addCase(fetchCart.rejected,  (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error   = action.error.message;
       });
 
-    // addToCartAsync: agrega producto a la DB y al estado local
-    builder
-      .addCase(addToCartAsync.fulfilled, (state, action) => {
-        const newItem = action.payload;
-        const existing = state.cartItems.find((i) => i.id === newItem.id);
-        if (existing) {
-          existing.quantity += 1;
-        } else {
-          state.cartItems.push(newItem);
-        }
-      });
+    // ## addToCartAsync: si el producto ya existe suma cantidad, si no lo agrega
+    builder.addCase(addToCartAsync.fulfilled, (state, action) => {
+      const newItem  = action.payload;
+      const existing = state.cartItems.find((i) => i.id === newItem.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        state.cartItems.push(newItem);
+      }
+    });
 
-    // clearCartAsync: vacia el carrito en DB y en estado local
-    builder
-      .addCase(clearCartAsync.fulfilled, (state) => {
-        state.cartItems = [];
-      });
-
-    // checkoutAsync: vacia el carrito despues de confirmar compra
-    builder
-      .addCase(checkoutAsync.fulfilled, (state) => {
-        state.cartItems = [];
-      });
+    // ## clearCartAsync y checkoutAsync: vacían el carrito en el estado local
+    builder.addCase(clearCartAsync.fulfilled, (state) => { state.cartItems = []; });
+    builder.addCase(checkoutAsync.fulfilled,  (state) => { state.cartItems = []; });
   },
 });
 
 export const { updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
 
 // ── Selectores ────────────────────────────────────────────────────────────
+// ## Funciones que extraen datos del store para usar con useSelector()
+
 export const selectCartItems     = (state) => state.cart.cartItems;
 export const selectCartLoading   = (state) => state.cart.loading;
-export const selectCartTotal     = (state) =>
+
+// ## Calcula el total sumando price * quantity de cada item
+export const selectCartTotal = (state) =>
   state.cart.cartItems.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
-    0
+    (sum, item) => sum + Number(item.price) * item.quantity, 0
   );
+
+// ## Cuenta el total de unidades en el carrito (para el badge del Navbar)
 export const selectCartItemCount = (state) =>
   state.cart.cartItems.reduce((sum, item) => sum + item.quantity, 0);
 

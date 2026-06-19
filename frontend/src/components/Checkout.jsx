@@ -1,29 +1,46 @@
+// ## COMPONENTE — Checkout (Confirmación de Compra)
+// ##
+// ## Pantalla final del proceso de compra.
+// ## Muestra el resumen del pedido y un botón para confirmar.
+// ##
+// ## Al confirmar:
+// ##   - Usuario logueado → llama a checkoutAsync (backend: descuenta stock, guarda Order, vacía carrito)
+// ##   - Sin login        → solo limpia el carrito local con clearCart
+// ##
+// ## Ruta: /checkout (protegida — requiere login via ProtectedRoute)
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { selectCartItems, selectCartTotal, selectCartItemCount, checkoutAsync, clearCart } from "../store/cartSlice";
+import {
+  selectCartItems, selectCartTotal, selectCartItemCount,
+  checkoutAsync, clearCart,
+} from "../store/cartSlice";
 import { useAuth } from "../features/auth/context/AuthContext";
 import "./Checkout.css";
 
 const Checkout = () => {
-  const dispatch = useDispatch();
-  const { user, token } = useAuth();
+  const dispatch  = useDispatch();
+  const { user }  = useAuth();
   const cartItems = useSelector(selectCartItems);
   const total     = useSelector(selectCartTotal);
   const itemCount = useSelector(selectCartItemCount);
+
+  // ## confirmed: alterna entre el formulario y la pantalla de "Compra confirmada"
   const [confirmed, setConfirmed] = useState(false);
 
   const handleConfirm = async () => {
-    if (user && token) {
-      // Usuario logueado: hace checkout en la DB (descuenta stock)
-      await dispatch(checkoutAsync({ userId: user.id, token }));
+    if (user) {
+      // ## Llama al backend: descuenta stock, guarda historial, vacía carrito en DB
+      await dispatch(checkoutAsync({ userId: user.id }));
     } else {
-      // Sin login: solo vacia el carrito local
+      // ## Sin login: solo limpia el estado local
       dispatch(clearCart());
     }
     setConfirmed(true);
   };
 
+  // ## Pantalla de éxito después de confirmar
   if (confirmed) {
     return (
       <div className="checkout__confirmed">
@@ -38,6 +55,7 @@ const Checkout = () => {
   return (
     <div className="checkout">
       <h1>Confirmar Compra</h1>
+
       {cartItems.length === 0 ? (
         <div className="checkout__empty">
           <p>No tenes productos en el carrito</p>
@@ -45,6 +63,7 @@ const Checkout = () => {
         </div>
       ) : (
         <div className="checkout__layout">
+          {/* ## Lista de items del pedido */}
           <div className="checkout__items">
             <h3>Tu pedido ({itemCount} productos)</h3>
             {cartItems.map((item) => (
@@ -59,6 +78,8 @@ const Checkout = () => {
               </div>
             ))}
           </div>
+
+          {/* ## Panel de total y botón de confirmación */}
           <div className="checkout__panel">
             <h3>Total a pagar</h3>
             <div className="checkout__total">${total.toLocaleString("es-AR")}</div>
