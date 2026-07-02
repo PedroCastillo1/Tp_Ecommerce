@@ -1,5 +1,18 @@
 package com.uade.tpo.ecommerce.config;
 
+// ## INICIALIZADOR DE DATOS — Seed de la Base de Datos
+// ##
+// ## Se ejecuta automáticamente cuando arranca la aplicación Spring Boot.
+// ## Implementa CommandLineRunner → Spring llama a run() justo después de arrancar.
+// ##
+// ## PROPÓSITO: Poblar la BD con datos de ejemplo si está vacía,
+// ## para que la tienda tenga productos desde el primer arranque.
+// ##
+// ## CONDICIÓN: Solo carga datos si hay menos de 10 productos (productosRepository.count() < 10)
+// ## Esto evita duplicar datos si el servidor se reinicia.
+// ##
+// ## CARGA: 8 categorías + ~25 productos con imágenes reales de Unsplash.
+
 import com.uade.tpo.ecommerce.model.Category;
 import com.uade.tpo.ecommerce.model.Product;
 import com.uade.tpo.ecommerce.repository.ICategoriaRepository;
@@ -21,14 +34,15 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private IProductosRepository productosRepository;
 
+    // ## Punto de entrada: Spring lo llama automáticamente al arrancar la app
     @Override
     public void run(String... args) {
-        // Solo carga datos si la base está vacía
+        // ## Solo carga datos si la base está vacía (evita duplicados en reinicios)
         if (productosRepository.count() >= 10) return;
 
         System.out.println(">>> Cargando datos iniciales...");
 
-        // ── Categorías ────────────────────────────────────────────
+        // ## Crear las 8 categorías base del catálogo
         Category electronica = save("Electrónica");
         Category ropa        = save("Ropa");
         Category calzado     = save("Calzado");
@@ -38,7 +52,7 @@ public class DataInitializer implements CommandLineRunner {
         Category juguetes    = save("Juguetes");
         Category belleza     = save("Belleza");
 
-        // ── Electrónica ───────────────────────────────────────────
+        // ## Electrónica
         prod("Smartphone Galaxy S24",
              "Último modelo con IA integrada, cámara de 50MP y pantalla AMOLED 120Hz.",
              899.99, 25,
@@ -75,7 +89,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500&q=80",
              Set.of(electronica));
 
-        // ── Ropa ──────────────────────────────────────────────────
+        // ## Ropa
         prod("Remera Premium Algodón",
              "100% algodón peinado, corte regular fit, disponible en 8 colores, lavado a 30°.",
              29.99, 120,
@@ -94,7 +108,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&q=80",
              Set.of(ropa));
 
-        // ── Calzado ───────────────────────────────────────────────
+        // ## Calzado
         prod("Nike Air Max 270",
              "Unidad Air más grande en el talón, suela de goma resistente, diseño retro futurista.",
              149.99, 45,
@@ -113,7 +127,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1603487742131-4160ec999306?w=500&q=80",
              Set.of(calzado));
 
-        // ── Hogar ─────────────────────────────────────────────────
+        // ## Hogar
         prod("Sofá 3 cuerpos aterciopelado",
              "Tapizado premium en terciopelo, estructura de madera de pino macizo, patas metálicas.",
              599.99, 6,
@@ -132,7 +146,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80",
              Set.of(hogar));
 
-        // ── Deportes ──────────────────────────────────────────────
+        // ## Deportes
         prod("Bicicleta MTB 29\" Shimano",
              "21 velocidades Shimano, frenos hidráulicos, cuadro aluminio doble suspensión.",
              549.99, 12,
@@ -151,7 +165,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=500&q=80",
              Set.of(deportes));
 
-        // ── Libros ────────────────────────────────────────────────
+        // ## Libros
         prod("El Poder del Ahora",
              "Eckhart Tolle. Una guía para la iluminación espiritual. Más de 3 millones de copias vendidas.",
              18.99, 90,
@@ -170,7 +184,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=500&q=80",
              Set.of(libros));
 
-        // ── Juguetes ──────────────────────────────────────────────
+        // ## Juguetes
         prod("LEGO Technic Ferrari 488 GTE",
              "1677 piezas, motor V8 funcional, suspensión delantera y trasera, escala 1:8.",
              199.99, 18,
@@ -183,7 +197,7 @@ public class DataInitializer implements CommandLineRunner {
              "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=500&q=80",
              Set.of(juguetes));
 
-        // ── Belleza ───────────────────────────────────────────────
+        // ## Belleza
         prod("Perfume Chanel Bleu 100ml EDP",
              "Fragancia amaderada aromática, notas de cedro, sándalo y ámbar. Larga duración 8+ horas.",
              159.99, 22,
@@ -205,12 +219,14 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println(">>> ¡Datos iniciales cargados correctamente! " + productosRepository.count() + " productos.");
     }
 
+    // ## Helper: crea y guarda una categoría nueva en la DB
     private Category save(String name) {
         Category c = new Category();
         c.setName(name);
         return categoriaRepository.save(c);
     }
 
+    // ## Helper: crea y guarda un producto nuevo con sus categorías
     private void prod(String name, String desc, double price, int stock, String imageUrl, Set<Category> cats) {
         Product p = new Product();
         p.setName(name);

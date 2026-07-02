@@ -1,5 +1,10 @@
 package com.uade.tpo.ecommerce.service;
 
+// ## INTERFAZ — Contrato del Servicio de Categorías
+// ##
+// ## Define las operaciones que debe implementar CategoryService.
+// ## Incluye CRUD completo: crear, leer, actualizar y eliminar categorías.
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -9,14 +14,12 @@ import com.uade.tpo.ecommerce.model.Category;
 @Service
 public interface ICategoryService {
 
-    public void deleteAllCategories();
-    public void deleteCategoryById(Long id);
-    public void saveCategory(Category category);
-    public boolean existsById(Long id);
-    public Category findCategoryByid(Long id);
-    public List<Category> getAllCategories();
-    public Category createCategory(Category category);
-    public Category updateCategory(Long id,String name);
-
-    
+    void deleteAllCategories();                           // ## eliminar todas las categorías
+    void deleteCategoryById(Long id);                     // ## eliminar una categoría por ID
+    void saveCategory(Category category);                 // ## guardar/actualizar categoría
+    boolean existsById(Long id);                          // ## verificar si existe por ID
+    Category findCategoryByid(Long id);                   // ## buscar categoría por ID
+    List<Category> getAllCategories();                     // ## listar todas las categorías
+    Category createCategory(Category category);           // ## crear categoría nueva
+    Category updateCategory(Long id, String name);        // ## actualizar nombre de categoría
 }

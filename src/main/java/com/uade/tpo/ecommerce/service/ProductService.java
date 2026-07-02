@@ -1,5 +1,18 @@
 package com.uade.tpo.ecommerce.service;
 
+// ## SERVICIO — Productos
+// ##
+// ## Lógica de negocio para el CRUD de productos del catálogo.
+// ## Es llamado por ProductController.
+// ##
+// ## Patrón DTO (Data Transfer Object):
+// ##   - Entrada: ProductRequest  → lo que el cliente manda (sin id, con categoryIds)
+// ##   - Salida:  ProductResponse → lo que devolvemos (con id y categorías como objetos)
+// ##   - Entidad: Product         → lo que guardamos en la DB (nunca se expone directo)
+// ##
+// ## Esto desacopla la API de la estructura interna de la base de datos:
+// ##   si cambia el modelo, la API puede mantenerse estable.
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +40,8 @@ public class ProductService implements IProductService {
     @Autowired
     private ICategoriaRepository categoriaRepository;
 
-    // ── Conversión entidad → DTO ──────────────────────────────────────────────
+    // ## Convierte una entidad Product a un DTO ProductResponse para enviar al cliente
+    // ## Mapea cada Category a CategoryResponse (solo id y name, sin los productos)
     private ProductResponse toResponse(Product product) {
         Set<CategoryResponse> categorias = product.getCategories().stream()
                 .map(c -> new CategoryResponse(c.getId(), c.getName()))
@@ -42,7 +56,8 @@ public class ProductService implements IProductService {
                 categorias);
     }
 
-    // ── Conversión DTO → entidad ─────────────────────────────────────────────
+    // ## Convierte un Set de IDs de categorías a entidades Category reales de la DB
+    // ## Lanza CategoriaNotFoundException si algún ID no existe
     private Set<Category> resolveCategories(Set<Long> categoryIds) {
         if (categoryIds == null || categoryIds.isEmpty()) {
             return new HashSet<>();
@@ -56,8 +71,7 @@ public class ProductService implements IProductService {
         return categories;
     }
 
-    // ── Métodos públicos ─────────────────────────────────────────────────────
-
+    // ## Lista todos los productos en el orden en que están en la DB
     @Override
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll().stream()
@@ -65,6 +79,8 @@ public class ProductService implements IProductService {
                 .collect(Collectors.toList());
     }
 
+    // ## Lista todos los productos ordenados alfabéticamente por nombre (A-Z)
+    // ## Se usa cuando el frontend envía ?ordered=true
     @Override
     public List<ProductResponse> getAllProductsOrdered() {
         return productRepository.findAll().stream()
@@ -73,6 +89,10 @@ public class ProductService implements IProductService {
                 .collect(Collectors.toList());
     }
 
+    // ## Crea un producto nuevo:
+    // ##   1. Mapea el DTO a entidad Product
+    // ##   2. Resuelve los IDs de categorías a entidades Category
+    // ##   3. Guarda en DB y devuelve el DTO de respuesta
     @Override
     public ProductResponse createProduct(ProductRequest request) {
         Product product = new Product();
@@ -85,6 +105,8 @@ public class ProductService implements IProductService {
         return toResponse(productRepository.save(product));
     }
 
+    // ## Actualiza todos los campos de un producto existente (reemplazo completo)
+    // ## Lanza ProductoNotFoundException si el ID no existe
     @Override
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product existing = productRepository.findById(id)
@@ -98,6 +120,8 @@ public class ProductService implements IProductService {
         return toResponse(productRepository.save(existing));
     }
 
+    // ## Elimina un producto por ID
+    // ## Verifica existencia antes de eliminar para dar un 404 descriptivo
     @Override
     public void deleteProductById(Long id) {
         if (!productRepository.existsById(id)) {
@@ -106,6 +130,8 @@ public class ProductService implements IProductService {
         productRepository.deleteById(id);
     }
 
+    // ## Busca un producto por ID y lo convierte a DTO
+    // ## Lanza ProductoNotFoundException si no existe (manejado por GlobalExceptionHandler → 404)
     @Override
     public ProductResponse findProductById(Long id) {
         Product product = productRepository.findById(id)
@@ -113,6 +139,7 @@ public class ProductService implements IProductService {
         return toResponse(product);
     }
 
+    // ## Verifica si existe un producto con el ID dado (true/false)
     @Override
     public boolean existsById(Long id) {
         return productRepository.existsById(id);
